@@ -1,0 +1,180 @@
+Finances: 
+The turnover of the orders of the last two months by country. 
+
+SELECT cu.country, ord.status, ord.orderDate, SUM(p.amount) as Turnover,  
+    -> ord.orderDate, cu.customerNumber, ord.orderNumber, p.checkNumber, MONTH(ord.orderDate)as month, YEAR(ord.orderDate) as year
+    -> FROM orders as ord
+    -> JOIN customers AS cu ON cu.customerNumber= ord.customerNumber
+    -> JOIN payments as p ON p.customerNumber = ord.customerNumber
+    -> WHERE YEAR(ord.orderDate) = YEAR(current_date()) - 1 AND (MONTH(ord.orderDate) = MONTH(current_date()) - 4 or MONTH(ord.orderDate) = MONTH(current_date()) - 5) AND 
+    -> ord.status = "Shipped" AND p.amount IS NOT NULL
+    -> GROUP BY COUNTRY, MONTH(ord.orderDate)
+    -> ORDER BY COUNTRY, MONTH(ord.orderDate), YEAR(ord.orderDate) 
+    -> ;
++-------------+---------+------------+-----------+------------+----------------+-------------+-------------+-------+------+
+| country     | status  | orderDate  | Turnover  | orderDate  | customerNumber | orderNumber | checkNumber | month | year |
++-------------+---------+------------+-----------+------------+----------------+-------------+-------------+-------+------+
+| Australia   | Shipped | 2021-02-16 | 180585.07 | 2021-02-16 |            114 |       10223 | GG31455     |     2 | 2021 |
+| Belgium     | Shipped | 2021-02-14 |  62253.85 | 2021-02-14 |            314 |       10221 | LQ244073    |     2 | 2021 |
+| France      | Shipped | 2021-01-11 | 133122.53 | 2021-01-11 |            406 |       10211 | HJ217687    |     1 | 2021 |
+| France      | Shipped | 2021-02-17 | 192087.05 | 2021-02-17 |            171 |       10224 | GB878038    |     2 | 2021 |
+| Ireland     | Shipped | 2021-02-08 |  49898.27 | 2021-02-08 |            189 |       10220 | BO711618    |     2 | 2021 |
+| Italy       | Shipped | 2021-02-05 |  25358.32 | 2021-02-05 |            473 |       10218 | LL427009    |     2 | 2021 |
+| Japan       | Shipped | 2021-01-08 |  62361.22 | 2021-01-08 |            177 |       10210 | AU750837    |     1 | 2021 |
+| Singapore   | Shipped | 2021-01-31 | 105420.57 | 2021-01-31 |            166 |       10217 | BQ327613    |     1 | 2021 |
+| Spain       | Shipped | 2021-01-12 | 781283.59 | 2021-01-12 |            141 |       10212 | AU364101    |     1 | 2021 |
+| Switzerland | Shipped | 2021-02-18 | 108777.92 | 2021-02-18 |            298 |       10225 | AJ574927    |     2 | 2021 |
+| UK          | Shipped | 2021-01-18 |  29586.15 | 2021-01-18 |            489 |       10213 | OC773849    |     1 | 2021 |
+| USA         | Shipped | 2021-01-05 |  85254.91 | 2021-01-05 |            347 |       10209 | DG700707    |     1 | 2021 |
+| USA         | Shipped | 2021-02-06 | 203320.85 | 2021-02-06 |            487 |       10219 | AH612904    |     2 | 2021 |
++-------------+---------+------------+-----------+------------+----------------+-------------+-------------+-------+------+
+13 rows in set (0,01 sec)
+
+Orders that have not yet been paid.
+
+create view CAview as (
+select customerNumber, sum(quantityOrdered * priceEach) as CA
+from orders
+left join orderdetails on orderdetails.orderNumber = orders.orderNumber
+group by customerNumber);
+
+create view paiementsview as (
+select customerNumber, sum(amount) as paiement
+from payments
+group by customerNumber);
+
+mysql> select customers.customerNumber, customerName, paiement, CA, (CA - paiement) as reste_a_regler
+    -> from customers
+    -> left join paiementsview on paiementsview.customerNumber = customers.customerNumber
+    -> left join CAview on CAview.customerNumber = customers.customerNumber
+    -> order by 5 desc
+    -> ;
++----------------+------------------------------------+-----------+-----------+----------------+
+| customerNumber | customerName                       | paiement  | CA        | reste_a_regler |
++----------------+------------------------------------+-----------+-----------+----------------+
+|            124 | Mini Gifts Distributors Ltd.       | 500590.20 | 584188.24 |       83598.04 |
+|            448 | Scandinavian Gift Ideas            |  48809.90 | 120943.53 |       72133.63 |
+|            141 | Euro+ Shopping Channel             | 668843.50 | 715908.86 |       47065.36 |
+|            353 | Reims Collectables                 |  80326.25 | 126983.19 |       46656.94 |
+|            131 | Land of Toys Inc.                  | 107639.94 | 149085.15 |       41445.21 |
+|            323 | Down Under Souveniers, Inc         |  79601.95 | 113195.27 |       33593.32 |
+|            462 | FunGiftIdeas.com                   |  58333.72 |  88627.49 |       30293.77 |
+|            276 | Anna's Decorations, Ltd            | 107185.70 | 137034.22 |       29848.52 |
+|            144 | Volvo Model Replicas, Co           |  43680.65 |  66694.82 |       23014.17 |
+|            496 | Kelly's Gift Shop                  |  84243.44 | 107207.04 |       22963.60 |
+|            250 | Lyon Souveniers                    |  49731.10 |  67659.19 |       17928.09 |
+|            242 | Alpha Cognac                       |  48051.04 |  60483.36 |       12432.32 |
+|            452 | Mini Auto Werke                    |  42252.87 |  51059.99 |        8807.12 |
+|            201 | UK Collectables, Ltd.              |  61167.18 |  69351.78 |        8184.60 |
+|            357 | GiftsForHim.com                    |  56662.38 |  57989.42 |        1327.04 |
+|            103 | Atelier graphique                  |  22314.36 |  22314.36 |           0.00 |
+|            112 | Signal Gift Stores                 |  80180.98 |  80180.98 |           0.00 |
+|            114 | Australian Collectors, Co.         | 180585.07 | 180585.07 |           0.00 |
+|            119 | La Rochelle Gifts                  | 116949.68 | 116949.68 |           0.00 |
+|            121 | Baane Mini Imports                 | 104224.79 | 104224.79 |           0.00 |
+|            128 | Blauer See Auto, Co.               |  75937.76 |  75937.76 |           0.00 |
+|            129 | Mini Wheels Co.                    |  66710.56 |  66710.56 |           0.00 |
+|            145 | Danish Wholesale Imports           | 107446.50 | 107446.50 |           0.00 |
+|            146 | Saveley & Henriot, Co.             | 130305.35 | 130305.35 |           0.00 |
+|            148 | Dragon Souveniers, Ltd.            | 156251.03 | 156251.03 |           0.00 |
+|            151 | Muscle Machine Inc                 | 177913.95 | 177913.95 |           0.00 |
+|            157 | Diecast Classics Inc.              |  98509.25 |  98509.25 |           0.00 |
+|            161 | Technics Stores Inc.               | 104545.22 | 104545.22 |           0.00 |
+|            166 | Handji Gifts& Co                   | 105420.57 | 105420.57 |           0.00 |
+|            167 | Herkku Gifts                       |  97562.47 |  97562.47 |           0.00 |
+|            171 | Daedalus Designs Imports           |  61781.70 |  61781.70 |           0.00 |
+|            172 | La Corne D'abondance, Co.          |  86553.52 |  86553.52 |           0.00 |
+|            173 | Cambridge Collectables Co.         |  32198.69 |  32198.69 |           0.00 |
+|            175 | Gift Depot Inc.                    |  66923.85 |  66923.85 |           0.00 |
+|            177 | Osaka Souveniers Co.               |  62361.22 |  62361.22 |           0.00 |
+|            181 | Vitachrome Inc.                    |  72497.64 |  72497.64 |           0.00 |
+|            186 | Toys of Finland, Co.               |  95546.46 |  95546.46 |           0.00 |
+|            187 | AV Stores, Co.                     | 148410.09 | 148410.09 |           0.00 |
+|            189 | Clover Collections, Co.            |  49898.27 |  49898.27 |           0.00 |
+|            198 | Auto-Moto Classics Inc.            |  21554.26 |  21554.26 |           0.00 |
+|            202 | Canadian Gift Exchange Network     |  70122.19 |  70122.19 |           0.00 |
+|            204 | Online Mini Collectables           |  55577.26 |  55577.26 |           0.00 |
+|            205 | Toys4GrownUps.com                  |  93803.30 |  93803.30 |           0.00 |
+|            209 | Mini Caravy                        |  40701.57 |  40701.57 |           0.00 |
+|            211 | King Kong Collectables, Co.        |  45480.79 |  45480.79 |           0.00 |
+|            216 | Enaco Distributors                 |  68520.47 |  68520.47 |           0.00 |
+|            219 | Boards & Toys Co.                  |   7918.60 |   7918.60 |           0.00 |
+|            227 | Heintze Collectables               |  89909.80 |  89909.80 |           0.00 |
+|            233 | Québec Home Shopping Network       |  39907.29 |  39907.29 |           0.00 |
+|            239 | Collectable Mini Designs Co.       |  80375.24 |  80375.24 |           0.00 |
+|            240 | giftsbymail.co.uk                  |  71783.75 |  71783.75 |           0.00 |
+|            249 | Amica Models & Co.                 |  82223.23 |  82223.23 |           0.00 |
+|            256 | Auto Associés & Cie.               |  58876.41 |  58876.41 |           0.00 |
+|            259 | Toms Spezialitäten, Ltd            |  89223.14 |  89223.14 |           0.00 |
+|            260 | Royal Canadian Collectables, Ltd.  |  66812.00 |  66812.00 |           0.00 |
+|            278 | Rovelli Gifts                      | 127529.69 | 127529.69 |           0.00 |
+|            282 | Souveniers And Things Co.          |  91655.61 |  91655.61 |           0.00 |
+|            286 | Marta's Replicas Co.               |  90545.37 |  90545.37 |           0.00 |
+|            298 | Vida Sport, Ltd                    | 108777.92 | 108777.92 |           0.00 |
+|            299 | Norway Gifts By Mail, Co.          |  69059.04 |  69059.04 |           0.00 |
+|            311 | Oulu Toy Supplies, Inc.            |  95706.15 |  95706.15 |           0.00 |
+|            314 | Petit Auto                         |  62253.85 |  62253.85 |           0.00 |
+|            319 | Mini Classics                      |  78432.16 |  78432.16 |           0.00 |
+|            320 | Mini Creations Ltd.                | 101872.52 | 101872.52 |           0.00 |
+|            321 | Corporate Gift Ideas Co.           | 132340.78 | 132340.78 |           0.00 |
+|            324 | Stylish Desk Decors, Co.           |  80556.73 |  80556.73 |           0.00 |
+|            328 | Tekni Collectables Inc.            |  38281.51 |  38281.51 |           0.00 |
+|            333 | Australian Gift Network, Co        |  55190.16 |  55190.16 |           0.00 |
+|            334 | Suominen Souveniers                | 103896.74 | 103896.74 |           0.00 |
+|            339 | Classic Gift Ideas, Inc            |  57939.34 |  57939.34 |           0.00 |
+|            344 | CAF Imports                        |  46751.14 |  46751.14 |           0.00 |
+|            347 | Men 'R' US Retailers, Ltd.         |  41506.19 |  41506.19 |           0.00 |
+|            350 | Marseille Mini Autos               |  71547.53 |  71547.53 |           0.00 |
+|            362 | Gifts4AllAges.com                  |  33533.47 |  33533.47 |           0.00 |
+|            363 | Online Diecast Creations Co.       | 116449.29 | 116449.29 |           0.00 |
+|            379 | Collectables For Less Inc.         |  73533.65 |  73533.65 |           0.00 |
+|            381 | Royale Belge                       |  29217.18 |  29217.18 |           0.00 |
+|            382 | Salzburg Collectables              |  85060.00 |  85060.00 |           0.00 |
+|            385 | Cruz & Sons Co.                    |  87468.30 |  87468.30 |           0.00 |
+|            386 | L'ordine Souveniers                |  90143.31 |  90143.31 |           0.00 |
+|            398 | Tokyo Collectables, Ltd            | 104933.28 | 104933.28 |           0.00 |
+|            406 | Auto Canal+ Petit                  |  74246.12 |  74246.12 |           0.00 |
+|            412 | Extreme Desk Decorations, Ltd      |  66704.94 |  66704.94 |           0.00 |
+|            415 | Bavarian Collectables Imports, Co. |  31310.09 |  31310.09 |           0.00 |
+|            424 | Classic Legends Inc.               |  69214.33 |  69214.33 |           0.00 |
+|            447 | Gift Ideas Corp.                   |  49967.78 |  49967.78 |           0.00 |
+|            450 | The Sharp Gifts Warehouse          |  59551.38 |  59551.38 |           0.00 |
+|            455 | Super Scale Inc.                   |  70378.65 |  70378.65 |           0.00 |
+|            456 | Microscale Inc.                    |  29230.43 |  29230.43 |           0.00 |
+|            458 | Corrida Auto Replicas, Ltd         | 112440.09 | 112440.09 |           0.00 |
+|            471 | Australian Collectables, Ltd       |  44920.76 |  44920.76 |           0.00 |
+|            473 | Frau da Collezione                 |  25358.32 |  25358.32 |           0.00 |
+|            475 | West Coast Collectables Co.        |  43748.72 |  43748.72 |           0.00 |
+|            484 | Iberia Gift Imports, Corp.         |  50987.85 |  50987.85 |           0.00 |
+|            486 | Motor Mint Distributors Inc.       |  77726.59 |  77726.59 |           0.00 |
+|            487 | Signal Collectibles Ltd.           |  42570.37 |  42570.37 |           0.00 |
+|            489 | Double Decker Gift Stores, Ltd     |  29586.15 |  29586.15 |           0.00 |
+|            495 | Diecast Collectables               |  65541.74 |  65541.74 |           0.00 |
+|            125 | Havel & Zbyszek Co                 |      NULL |      NULL |           NULL |
+|            168 | American Souvenirs Inc             |      NULL |      NULL |           NULL |
+|            169 | Porto Imports Co.                  |      NULL |      NULL |           NULL |
+|            206 | Asian Shopping Network, Co         |      NULL |      NULL |           NULL |
+|            223 | Natürlich Autos                    |      NULL |      NULL |           NULL |
+|            237 | ANG Resellers                      |      NULL |      NULL |           NULL |
+|            247 | Messner Shopping Network           |      NULL |      NULL |           NULL |
+|            273 | Franken Gifts, Co                  |      NULL |      NULL |           NULL |
+|            293 | BG&E Collectables                  |      NULL |      NULL |           NULL |
+|            303 | Schuyler Imports                   |      NULL |      NULL |           NULL |
+|            307 | Der Hund Imports                   |      NULL |      NULL |           NULL |
+|            335 | Cramer Spezialitäten, Ltd          |      NULL |      NULL |           NULL |
+|            348 | Asian Treasures, Inc.              |      NULL |      NULL |           NULL |
+|            356 | SAR Distributors, Co               |      NULL |      NULL |           NULL |
+|            361 | Kommission Auto                    |      NULL |      NULL |           NULL |
+|            369 | Lisboa Souveniers, Inc             |      NULL |      NULL |           NULL |
+|            376 | Precious Collectables              |      NULL |      NULL |           NULL |
+|            409 | Stuttgart Collectable Exchange     |      NULL |      NULL |           NULL |
+|            443 | Feuer Online Stores, Inc           |      NULL |      NULL |           NULL |
+|            459 | Warburg Exchange                   |      NULL |      NULL |           NULL |
+|            465 | Anton Designs, Ltd.                |      NULL |      NULL |           NULL |
+|            477 | Mit Vergnügen & Co.                |      NULL |      NULL |           NULL |
+|            480 | Kremlin Collectables, Co.          |      NULL |      NULL |           NULL |
+|            481 | Raanan Stores, Inc                 |      NULL |      NULL |           NULL |
++----------------+------------------------------------+-----------+-----------+----------------+
+122 rows in set (0,01 sec)
+
+mysql> 
