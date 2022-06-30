@@ -1,0 +1,86 @@
+
+mysql> select * 
+    -> from (select *, 
+    -> rank() over (partition by mois order by CA desc) as classement  from (
+    -> 
+Display all 869 possibilities? (y or n) 
+    -> select salesRepEmployeeNumber,
+    ->         date_format(orderDate, '%Y-%m') as mois,
+    ->         concat(lastname, ' ', firstname) as employe,
+    ->         round(sum(priceEach * quantityOrdered), 0) as CA
+    -> 
+Display all 869 possibilities? (y or n) 
+    -> from customers
+    -> 
+Display all 869 possibilities? (y or n) 
+    -> left join employees on employees.employeeNumber = customers.salesRepEmployeeNumber
+    -> 
+Display all 869 possibilities? (y or n) 
+    -> right join orders on orders.customerNumber = customers.customerNumber
+    -> 
+Display all 869 possibilities? (y or n) 
+    -> left join orderdetails on orders.orderNumber = orderdetails.orderNumber
+    -> 
+Display all 869 possibilities? (y or n) 
+    -> group by 1,2,3 ) as vendeurs_CA_mois) as rang
+    -> where classement <= 2
+    -> order by mois desc, classement asc;
++------------------------+---------+------------------+--------+------------+
+| salesRepEmployeeNumber | mois    | employe          | CA     | classement |
++------------------------+---------+------------------+--------+------------+
+|                   1165 | 2022-03 | Jennings Leslie  |  83598 |          1 |
+|                   1337 | 2022-03 | Bondur Loui      |  64585 |          2 |
+|                   1370 | 2022-02 | Hernandez Gerard | 167135 |          1 |
+|                   1165 | 2022-02 | Jennings Leslie  |  99014 |          2 |
+|                   1501 | 2022-01 | Bott Larry       |  92556 |          1 |
+|                   1165 | 2022-01 | Jennings Leslie  |  61704 |          2 |
+|                   1612 | 2021-12 | Marsh Peter      |  91607 |          1 |
+|                   1370 | 2021-12 | Hernandez Gerard |  69715 |          2 |
+|                   1401 | 2021-11 | Castillo Pamela  | 113114 |          1 |
+|                   1286 | 2021-11 | Tseng Foon Yue   | 109871 |          2 |
+|                   1370 | 2021-10 | Hernandez Gerard | 108759 |          1 |
+|                   1501 | 2021-10 | Bott Larry       |  99613 |          2 |
+|                   1504 | 2021-09 | Jones Barry      |  97480 |          1 |
+|                   1323 | 2021-09 | Vanauf George    |  35322 |          2 |
+|                   1216 | 2021-08 | Patterson Steve  |  82775 |          1 |
+|                   1702 | 2021-08 | Gerard Martin    |  61402 |          2 |
+|                   1401 | 2021-07 | Castillo Pamela  | 103391 |          1 |
+|                   1188 | 2021-07 | Firrelli Julie   |  63683 |          2 |
+|                   1612 | 2021-06 | Marsh Peter      |  81930 |          1 |
+|                   1370 | 2021-06 | Hernandez Gerard |  51698 |          2 |
+|                   1501 | 2021-05 | Bott Larry       |  73838 |          1 |
+|                   1323 | 2021-05 | Vanauf George    |  72548 |          2 |
+|                   1370 | 2021-04 | Hernandez Gerard |  62225 |          1 |
+|                   1401 | 2021-04 | Castillo Pamela  |  28212 |          2 |
+|                   1165 | 2021-03 | Jennings Leslie  |  43369 |          1 |
+|                   1323 | 2021-03 | Vanauf George    |  42362 |          2 |
+|                   1166 | 2021-02 | Thompson Leslie  |  80375 |          1 |
+|                   1702 | 2021-02 | Gerard Martin    |  47376 |          2 |
+|                   1370 | 2021-01 | Hernandez Gerard |  65590 |          1 |
+|                   1166 | 2021-01 | Thompson Leslie  |  57124 |          2 |
+|                   1188 | 2020-12 | Firrelli Julie   |  59265 |          1 |
+|                   1337 | 2020-12 | Bondur Loui      |  49615 |          2 |
+|                   1370 | 2020-11 | Hernandez Gerard | 140446 |          1 |
+|                   1702 | 2020-11 | Gerard Martin    | 119415 |          2 |
+|                   1165 | 2020-10 | Jennings Leslie  | 136303 |          1 |
+|                   1401 | 2020-10 | Castillo Pamela  |  96164 |          2 |
+|                   1611 | 2020-09 | Fixter Andy      |  51376 |          1 |
+|                   1370 | 2020-09 | Hernandez Gerard |  44940 |          2 |
+|                   1165 | 2020-08 | Jennings Leslie  |  56053 |          1 |
+|                   1166 | 2020-08 | Thompson Leslie  |  50343 |          2 |
+|                   1165 | 2020-07 | Jennings Leslie  |  38675 |          1 |
+|                   1612 | 2020-07 | Marsh Peter      |  32077 |          2 |
+|                   1165 | 2020-06 | Jennings Leslie  |  55602 |          1 |
+|                   1370 | 2020-06 | Hernandez Gerard |  50484 |          2 |
+|                   1337 | 2020-05 | Bondur Loui      |  67525 |          1 |
+|                   1286 | 2020-05 | Tseng Foon Yue   |  58841 |          2 |
+|                   1611 | 2020-04 | Fixter Andy      |  45864 |          1 |
+|                   1621 | 2020-04 | Nishi Mami       |  44380 |          2 |
+|                   1501 | 2020-03 | Bott Larry       |  48426 |          1 |
+|                   1337 | 2020-03 | Bondur Loui      |  33383 |          2 |
+|                   1401 | 2020-02 | Castillo Pamela  | 106111 |          1 |
+|                   1621 | 2020-02 | Nishi Mami       |  51001 |          2 |
+|                   1504 | 2020-01 | Jones Barry      |  60768 |          1 |
+|                   1370 | 2020-01 | Hernandez Gerard |  40206 |          2 |
++------------------------+---------+------------------+--------+------------+
+54 rows in set (0,02 sec)
